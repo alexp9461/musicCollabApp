@@ -1,5 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import User from '../models/User';
 
 const router = express.Router();
@@ -80,6 +81,39 @@ router.post('/register', async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Error creating user' });
+  }
+});
+
+// Validate token endpoint
+router.get('/validate', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    res.json({
+      valid: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        age: user.age,
+        bio: user.bio,
+        location: user.location,
+        skills: user.skills,
+        genres: user.genres,
+        lookingFor: user.lookingFor,
+        profilePictures: user.profilePictures,
+        socialLinks: user.socialLinks,
+        musicLinks: user.musicLinks,
+        isActive: user.isActive,
+        lastSeen: user.lastSeen
+      }
+    });
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(401).json({ message: 'Invalid token' });
   }
 });
 

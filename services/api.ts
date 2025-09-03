@@ -54,6 +54,10 @@ export const authAPI = {
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
+  validateToken: async (): Promise<{ valid: boolean; user: User }> => {
+    const response = await api.get('/auth/validate');
+    return response.data;
+  },
 };
 
 export const userAPI = {

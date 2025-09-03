@@ -46,20 +46,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('👤 Stored user exists:', !!storedUser);
       
       if (storedToken && storedUser) {
-        console.log('🔄 Validating stored token...');
-        // For now, skip backend validation to avoid blocking the UI
-        // Just use stored data if it exists
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        console.log('✅ Using stored auth data');
+        console.log('🔄 Validating stored token with backend...');
+        try {
+          // Validate token with backend
+          const response = await authAPI.validateToken();
+          console.log('✅ Token validated with backend');
+          
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.log('❌ Token validation failed, clearing auth data');
+          // Token is invalid or expired, clear it
+          await AsyncStorage.removeItem('authToken');
+          await AsyncStorage.removeItem('user');
+          setToken(null);
+          setUser(null);
+        }
       } else {
         console.log('❌ No stored auth data found');
+        setToken(null);
+        setUser(null);
       }
     } catch (error) {
       console.error('❌ Error checking auth state:', error);
       // Clear invalid auth data on error
       await AsyncStorage.removeItem('authToken');
       await AsyncStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
     } finally {
       console.log('🏁 Auth check complete, setting loading to false');
       setIsLoading(false);
@@ -108,12 +122,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      console.log('🔐 Logging out user...');
+      setIsLoading(true);
+      
+      // Clear local storage
       await AsyncStorage.removeItem('authToken');
       await AsyncStorage.removeItem('user');
+      
+      // Clear state
       setToken(null);
       setUser(null);
+      
+      console.log('✅ Logout complete');
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('❌ Error during logout:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

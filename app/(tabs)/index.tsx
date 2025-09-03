@@ -126,6 +126,10 @@ export default function DiscoverScreen() {
   if (!currentUser) {
     return (
       <View style={styles.emptyContainer}>
+        <TouchableOpacity
+          style={styles.searchSettingsButton}
+          onPress={() => setShowSearchSettings(true)}
+        ></TouchableOpacity>
         <Text style={styles.emptyText}>No more musicians to discover!</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={loadUsers}>
           <Text style={styles.refreshButtonText}>Refresh</Text>
