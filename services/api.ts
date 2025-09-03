@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { AuthResponse, User } from '../types/user';
 
-const API_BASE_URL = 'https://musiccollab-api-production.up.railway.app/api'; // Change this to your deployed URL: https://your-app.railway.app/api
+const API_BASE_URL = 'http://localhost:3000/api'; // Temporarily using localhost for testing
 
 const api = axios.create({
   baseURL: API_BASE_URL,
