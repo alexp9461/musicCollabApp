@@ -5,32 +5,55 @@ import User from '../models/User';
 const router = express.Router();
 
 // Get current user profile
-router.get('/profile', authenticateToken, async (req: AuthRequest, res) => {
+// Get potential matches (users to swipe on)
+// Get potential matches (users to swipe on)
+router.get('/discover', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const user = req.user;
-    if (!user) {
+    const currentUser = req.user;
+    if (!currentUser) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      age: user.age,
-      bio: user.bio,
-      location: user.location,
-      skills: user.skills,
-      genres: user.genres,
-      lookingFor: user.lookingFor,
-      profilePictures: user.profilePictures,
-      socialLinks: user.socialLinks,
-      musicLinks: user.musicLinks,
-      isActive: user.isActive,
-      lastSeen: user.lastSeen
-    });
+    // Get search filters from query parameters
+    const { requiredSkills, localOnly, maxDistance } = req.query;
+
+    // Find users that:
+    // 1. Are not the current user
+    // 2. Haven't been swiped on (left or right) by current user
+    // 3. Are active
+    const excludeIds = [
+      currentUser._id,
+      ...currentUser.swipedLeft,
+      ...currentUser.swipedRight
+    ];
+
+    // Build the query
+    let query: any = {
+      _id: { $nin: excludeIds },
+      isActive: true
+    };
+
+    // Add skills filter if specified
+    if (requiredSkills && Array.isArray(requiredSkills) && requiredSkills.length > 0) {
+      query['skills.name'] = { $in: requiredSkills };
+    }
+
+    // Add location filter if localOnly is true
+    if (localOnly === 'true') {
+      // For now, we'll filter by same city/state
+      // In a real app, you'd calculate actual distances
+      query['location.city'] = currentUser.location.city;
+      query['location.state'] = currentUser.location.state;
+    }
+
+    const potentialMatches = await User.find(query)
+      .select('-password -swipedLeft -swipedRight -matches')
+      .limit(20);
+
+    res.json(potentialMatches);
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ message: 'Error fetching profile' });
+    console.error('Discover error:', error);
+    res.status(500).json({ message: 'Error fetching potential matches' });
   }
 });
 

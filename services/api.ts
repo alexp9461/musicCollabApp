@@ -67,8 +67,9 @@ export const userAPI = {
     return response.data;
   },
 
-  getDiscoverUsers: async (): Promise<User[]> => {
-    const response = await api.get('/users/discover');
+  getDiscoverUsers: async (queryParams?: string): Promise<User[]> => {
+    const url = queryParams ? `/users/discover?${queryParams}` : '/users/discover';
+    const response = await api.get(url);
     return response.data;
   },
 
